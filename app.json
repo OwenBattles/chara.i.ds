@@ -3,7 +3,7 @@
     "name": "Chara.i.ds",
     "slug": "chara.i.ds",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -15,16 +15,33 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.charaids.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.charaids.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT",
+          "supportedOrientations": ["PORTRAIT_UP", "LANDSCAPE_LEFT", "LANDSCAPE_RIGHT"]
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "charaids"
+      }
     }
   }
 }

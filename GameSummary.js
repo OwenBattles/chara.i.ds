@@ -1,7 +1,23 @@
-import React from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const GameSummary = ({ navigation, route }) => {
+  useEffect(() => {
+    // Lock to portrait when component mounts
+    const lockOrientation = async () => {
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP
+      );
+    };
+    lockOrientation();
+
+    // Unlock when component unmounts
+    return () => {
+      ScreenOrientation.unlockAsync();
+    };
+  }, []);
+
   const { score } = route.params;
 
   return (

@@ -1,7 +1,23 @@
-import React from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import React, { useEffect } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const SavedDecks = ({ navigation }) => {
+  useEffect(() => {
+    // Lock to portrait when component mounts
+    const lockOrientation = async () => {
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP
+      );
+    };
+    lockOrientation();
+
+    // Unlock when component unmounts
+    return () => {
+      ScreenOrientation.unlockAsync();
+    };
+  }, []);
+
   // Placeholder data - replace with actual data management
   const savedDecks = [
     { id: '1', name: 'Deck 1', cards: 20 },

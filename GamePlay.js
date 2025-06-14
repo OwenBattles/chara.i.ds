@@ -1,24 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const GamePlay = ({ navigation, route }) => {
   const { timeLimit } = route.params;
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [score, setScore] = useState(0);
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    // Start the timer
+    timerRef.current = setInterval(() => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
-          clearInterval(timer);
-          navigation.navigate('GameSummary', { score });
+          clearInterval(timerRef.current);
+          // Use setTimeout to ensure navigation happens after state updates
+          setTimeout(() => {
+            navigation.navigate('GameSummary', { score });
+          }, 0);
           return 0;
         }
         return prevTime - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    // Cleanup timer on unmount
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, [navigation, score]);
 
   const handleCorrect = () => {
@@ -70,11 +80,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 20,
+    flexDirection: 'row', // Changed to row for landscape layout
   },
   header: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    zIndex: 1,
   },
   timer: {
     fontSize: 18,
@@ -90,6 +105,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 60, // Added margin to account for header
   },
   question: {
     fontSize: 24,
@@ -98,9 +114,12 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 20,
   },
   button: {
     padding: 15,

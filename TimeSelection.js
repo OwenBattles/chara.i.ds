@@ -1,7 +1,23 @@
-import React, { useState } from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TimeSelection = ({ navigation, route }) => {
+  useEffect(() => {
+    // Lock to portrait when component mounts
+    const lockOrientation = async () => {
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP
+      );
+    };
+    lockOrientation();
+
+    // Unlock when component unmounts
+    return () => {
+      ScreenOrientation.unlockAsync();
+    };
+  }, []);
+
   const [selectedTime, setSelectedTime] = useState(null);
   const times = [30, 60, 90, 120]; // Time in seconds
 
