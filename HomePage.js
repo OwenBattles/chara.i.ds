@@ -1,8 +1,14 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
-import React, { useEffect } from 'react';
+import { default as React, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CharaidsLogo from './CharaidsLogo';
+import CustomTextBox from './TextBox';
+
+
 
 const HomePage = ({ navigation }) => {
+  const [category, setCategory] = useState('');
+
   useEffect(() => {
     // Lock to portrait when component mounts
     const lockOrientation = async () => {
@@ -20,7 +26,13 @@ const HomePage = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Chara.i.ds</Text>
+      <View style={styles.logoContainer}> <CharaidsLogo /> </View>
+      <CustomTextBox 
+        placeholder="Enter a Category" 
+        value={category} 
+        onChangeText={setCategory} 
+        style={styles.textBox}
+      />
       <TouchableOpacity 
         style={styles.button}
         onPress={() => navigation.navigate('TimeSelection')}

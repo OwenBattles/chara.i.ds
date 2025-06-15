@@ -44,17 +44,26 @@ export default function App() {
         <Stack.Screen 
           name="HomePage" 
           component={HomePage} 
-          options={{ title: 'Chara.i.ds' }}
+          options={{ 
+            title: 'Chara.i.ds',
+            headerShown: false // hide header
+          }}
         />
         <Stack.Screen 
           name="SavedDecks" 
           component={SavedDecks} 
-          options={{ title: 'Saved Decks' }}
+          options={{ 
+            title: 'Saved Decks',
+            headerShown: false // hide header
+          }}
         />
         <Stack.Screen 
           name="TimeSelection" 
           component={TimeSelection} 
-          options={{ title: 'Select Time' }}
+          options={{ 
+            title: 'Select Time',
+            headerShown: false // hide header
+          }}
         />
         <Stack.Screen 
           name="GamePlay" 
@@ -67,7 +76,10 @@ export default function App() {
         <Stack.Screen 
           name="GameSummary" 
           component={GameSummary} 
-          options={{ title: 'Game Summary' }}
+          options={{ 
+            title: 'Game Summary',
+            headerShown: false // hide header
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
