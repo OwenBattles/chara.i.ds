@@ -8,32 +8,6 @@ const GamePlay = ({ navigation, route }) => {
   const timerRef = useRef(null);
 
   useEffect(() => {
-    if (!isPlaying) return;
-
-    const subscription = Accelerometer.addListener(accelerometerData => {
-      const { x } = accelerometerData;
-      const now = Date.now();
-      
-      // Only process tilt if enough time has passed since last action
-      if (now - lastActionTime.current >= 500) {
-        if (x > 0.5 && !isTilting) {
-          handleTilt('right');
-          lastActionTime.current = now;
-        } else if (x < -0.5 && !isTilting) {
-          handleTilt('left');
-          lastActionTime.current = now;
-        }
-      }
-      
-      setTiltValue(x);
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [isPlaying, isTilting]);
-
-  useEffect(() => {
     // Start the timer
     timerRef.current = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -109,21 +83,6 @@ const GamePlay = ({ navigation, route }) => {
           <Text style={styles.buttonText}>Correct</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={[styles.button, tiltDirection === 'left' && styles.tiltingButton]} 
-          onPress={handleNo}
-        >
-          <Text style={styles.buttonText}>No</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.button, tiltDirection === 'right' && styles.tiltingButton]} 
-          onPress={handleYes}
-        >
-          <Text style={styles.buttonText}>Yes</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
@@ -190,37 +149,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '600',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  button: {
-    backgroundColor: '#5DADE2',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  tiltingButton: {
-    backgroundColor: '#3498DB',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  gameOverText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#154360',
-    marginBottom: 20,
-  },
-  scoreText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F618D',
   },
 });
 
