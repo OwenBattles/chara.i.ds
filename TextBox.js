@@ -1,15 +1,25 @@
 import React from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-const CustomTextBox = ({ placeholder, value, onChangeText }) => {
+const CustomTextBox = ({ 
+  placeholder, 
+  value, 
+  onChangeText, 
+  style, 
+  onSubmitEditing,
+  editable = true 
+}) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <TextInput
         style={styles.input}
         placeholder={placeholder}
         placeholderTextColor="#A9CCE3"
         value={value}
         onChangeText={onChangeText}
+        onSubmitEditing={onSubmitEditing}
+        editable={editable}
+        returnKeyType="done"
       />
     </View>
   );
@@ -22,6 +32,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginVertical: 10,
+    width: '90%',
     shadowColor: '#2980B9',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,

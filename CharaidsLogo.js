@@ -4,13 +4,13 @@ import { StyleSheet, Text, View } from 'react-native';
 const CharaidsLogo = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.logoText}>
-        <Text style={styles.char}>Chara</Text>
-        <Text style={styles.dot}>.</Text>
-        <Text style={styles.i}>i</Text>
-        <Text style={styles.dot}>.</Text>
-        <Text style={styles.ds}>ds</Text>
-      </Text>
+      <View style={styles.logoContainer}>
+        <Text style={[styles.logoText, styles.char]}>Chara</Text>
+        <Text style={[styles.logoText, styles.dot]}>.</Text>
+        <Text style={[styles.logoText, styles.i]}>i</Text>
+        <Text style={[styles.logoText, styles.dot]}>.</Text>
+        <Text style={[styles.logoText, styles.ds]}>ds</Text>
+      </View>
     </View>
   );
 };
@@ -19,6 +19,10 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     marginVertical: 20,
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   logoText: {
     fontSize: 36,

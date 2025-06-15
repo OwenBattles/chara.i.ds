@@ -1,10 +1,8 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { default as React, useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CharaidsLogo from './CharaidsLogo';
 import CustomTextBox from './TextBox';
-
-
 
 const HomePage = ({ navigation }) => {
   const [category, setCategory] = useState('');
@@ -24,18 +22,32 @@ const HomePage = ({ navigation }) => {
     };
   }, []);
 
+  const handleStartGame = () => {
+    if (!category.trim()) {
+      Alert.alert('Error', 'Please enter a category');
+      return;
+    }
+
+    navigation.navigate('TimeSelection', {
+      category: category,
+      isCustomCategory: true
+    });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}> <CharaidsLogo /> </View>
+      <View style={styles.logoContainer}>
+        <CharaidsLogo />
+      </View>
       <CustomTextBox 
         placeholder="Enter a Category" 
         value={category} 
-        onChangeText={setCategory} 
+        onChangeText={setCategory}
         style={styles.textBox}
       />
       <TouchableOpacity 
         style={styles.button}
-        onPress={() => navigation.navigate('TimeSelection')}
+        onPress={handleStartGame}
       >
         <Text style={styles.buttonText}>Start New Game</Text>
       </TouchableOpacity>
@@ -57,17 +69,18 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  logoContainer: {
     marginBottom: 30,
-    color: '#333',
+  },
+  textBox: {
+    width: '90%',
+    marginBottom: 20,
   },
   button: {
     backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 10,
-    width: '80%',
+    width: '90%',
     marginVertical: 10,
   },
   buttonText: {
