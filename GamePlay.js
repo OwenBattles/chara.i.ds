@@ -9,9 +9,40 @@ const GamePlay = ({ navigation, route }) => {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [answeredItems, setAnsweredItems] = useState([]);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [gameOver, setGameOver] = useState(false);
+  const [tiltDirection, setTiltDirection] = useState(null);
+  const [tiltValue, setTiltValue] = useState(0);
+  const [isTilting, setIsTilting] = useState(false);
+  const [lastTiltTime, setLastTiltTime] = useState(0);
   const timerRef = useRef(null);
   const lastActionTime = useRef(0);
   const canTriggerAction = useRef(true);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const subscription = Accelerometer.addListener(accelerometerData => {
+      const { x } = accelerometerData;
+      const now = Date.now();
+      
+      // Only process tilt if enough time has passed since last action
+      if (now - lastActionTime.current >= 500) {
+        if (x > 0.5 && !isTilting) {
+          handleTilt('right');
+          lastActionTime.current = now;
+        } else if (x < -0.5 && !isTilting) {
+          handleTilt('left');
+          lastActionTime.current = now;
+        }
+      }
+      
+      setTiltValue(x);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isPlaying, isTilting]);
 
   useEffect(() => {
     // Start the timer
@@ -19,7 +50,7 @@ const GamePlay = ({ navigation, route }) => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
           clearInterval(timerRef.current);
-          setIsPlaying(false);
+          // setIsPlaying(false);
           // Use setTimeout to ensure navigation happens after state updates
           setTimeout(() => {
             navigation.navigate('GameSummary', { 
@@ -42,56 +73,6 @@ const GamePlay = ({ navigation, route }) => {
     };
   }, [navigation, score, items.length, answeredItems]);
 
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    // Set up accelerometer
-    Accelerometer.setUpdateInterval(100);
-
-    const subscription = Accelerometer.addListener((data) => {
-      const now = Date.now();
-      
-      // Check if enough time has passed since last action
-      if (now - lastActionTime.current < 1000) return;
-
-      // Check if phone is level enough to trigger new action
-      if (Math.abs(data.z) < 0.3) {
-        canTriggerAction.current = true;
-        return;
-      }
-
-      // If we can't trigger an action yet, return
-      if (!canTriggerAction.current) return;
-
-      // Handle tilt actions
-      if (data.z > 0.7) {
-        handleCorrect();
-        lastActionTime.current = now;
-        canTriggerAction.current = false;
-      } else if (data.z < -0.7) {
-        handleIncorrect();
-        lastActionTime.current = now;
-        canTriggerAction.current = false;
-      }
-    });
-
-    // Cleanup accelerometer listener
-    return () => {
-      subscription.remove();
-      Accelerometer.removeAllListeners();
-    };
-  }, [isPlaying]);
-
-  const handleCorrect = () => {
-    setScore(prevScore => prevScore + 1);
-    handleNextItem(true);
-  };
-
-  const handleIncorrect = () => {
-    setScore(prevScore => Math.max(0, prevScore - 1));
-    handleNextItem(false);
-  };
-
   const handleNextItem = (wasCorrect) => {
     setAnsweredItems(prev => [...prev, {
       item: items[currentItemIndex],
@@ -101,10 +82,11 @@ const GamePlay = ({ navigation, route }) => {
     if (currentItemIndex < items.length - 1) {
       setCurrentItemIndex(prev => prev + 1);
     } else {
-      // All items have been answered
-      clearInterval(timerRef.current);
-      setIsPlaying(false);
-      navigation.navigate('GameSummary', { 
+      // Game is over, navigate to summary
+      console.log('currentItemIndex', currentItemIndex);
+      console.log('items', items.length);
+      navigation.navigate('GameSummary', {
+        category,
         score,
         totalItems: items.length,
         answeredItems: [...answeredItems, {
@@ -113,6 +95,33 @@ const GamePlay = ({ navigation, route }) => {
         }]
       });
     }
+  };
+
+  const handleYes = () => {
+    if (currentItemIndex < items.length - 1) {
+      setCurrentItemIndex(currentItemIndex + 1);
+    } else {
+      setGameOver(true);
+    }
+  };
+
+  const handleNo = () => {
+    if (currentItemIndex < items.length - 1) {
+      setCurrentItemIndex(currentItemIndex + 1);
+    } else {
+      setGameOver(true);
+    }
+  };
+
+  const handleTilt = (direction) => {
+    if (isTilting) return;
+    setIsTilting(true);
+    setTiltDirection(direction);
+    setScore(prev => prev + 1);
+    setTimeout(() => {
+      setIsTilting(false);
+      setTiltDirection(null);
+    }, 500);
   };
 
   const handleExit = () => {
@@ -130,6 +139,18 @@ const GamePlay = ({ navigation, route }) => {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (gameOver) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.gameOverText}>Game Over!</Text>
+        <Text style={styles.scoreText}>Final Score: {score}</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('HomePage')}>
+          <Text style={styles.buttonText}>Return to Home</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -153,6 +174,21 @@ const GamePlay = ({ navigation, route }) => {
         <Text style={styles.instructions}>
           Tilt up for correct, down for skip
         </Text>
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity 
+          style={[styles.button, tiltDirection === 'left' && styles.tiltingButton]} 
+          onPress={handleNo}
+        >
+          <Text style={styles.buttonText}>No</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, tiltDirection === 'right' && styles.tiltingButton]} 
+          onPress={handleYes}
+        >
+          <Text style={styles.buttonText}>Yes</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -225,6 +261,37 @@ const styles = StyleSheet.create({
     marginTop: 30,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  button: {
+    backgroundColor: '#5DADE2',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  tiltingButton: {
+    backgroundColor: '#3498DB',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  gameOverText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#154360',
+    marginBottom: 20,
+  },
+  scoreText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F618D',
   },
 });
 
