@@ -1,16 +1,8 @@
-import Slider from '@react-native-community/slider';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import BackButton from './BackButton';
-import LoadingScreen from './LoadingScreen';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TimeSelection = ({ navigation, route }) => {
-  const { category, isCustomCategory = false } = route.params || {};
-  const [selectedTime, setSelectedTime] = useState(60);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
-
   useEffect(() => {
     // Lock to portrait when component mounts
     const lockOrientation = async () => {
@@ -26,57 +18,15 @@ const TimeSelection = ({ navigation, route }) => {
     };
   }, []);
 
-  const queryBackend = async (categoryInput) => {
-    try {
-      setIsLoading(true);
-      setShowLoadingScreen(true);
-      console.log('Sending request to backend with category:', categoryInput);
-      const response = await fetch('https://charaids.onrender.com/generate-list', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ category: categoryInput }),
-      });
+  const [selectedTime, setSelectedTime] = useState(null);
+  const times = [30, 60, 90, 120]; // Time in seconds
 
-      console.log('Response status:', response.status);
-      const responseText = await response.text();
-      console.log('Response text:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Failed to generate category items: ${response.status} ${responseText}`);
-      }
-
-      const data = JSON.parse(responseText);
-      console.log('Parsed response data:', data);
-      return data.items || [];
-    } catch (error) {
-      console.error('Detailed error:', error);
-      Alert.alert('Error', 'Failed to generate category items. Please try again.');
-      return null;
-    } finally {
-      setIsLoading(false);
-      setShowLoadingScreen(false);
-    }
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time);
   };
 
-  const startGame = async () => {
-    if (!selectedTime) {
-      Alert.alert('Error', 'Please select a time limit');
-      return;
-    }
-
-    if (isCustomCategory) {
-      const items = await queryBackend(category);
-      if (items) {
-        navigation.navigate('GamePlay', {
-          timeLimit: selectedTime,
-          category: category,
-          items: items,
-          isCustomCategory: true
-        });
-      }
-    } else {
+  const startGame = () => {
+    if (selectedTime) {
       navigation.navigate('GamePlay', {
         timeLimit: selectedTime,
         deckId: route.params?.deckId
@@ -84,39 +34,34 @@ const TimeSelection = ({ navigation, route }) => {
     }
   };
 
-  if (showLoadingScreen) {
-    return <LoadingScreen category={category} />;
-  }
-
   return (
     <View style={styles.container}>
-      <View style={styles.backButtonContainer}>
-        <BackButton color="#1F618D" size={32} style={{ marginTop: 10 }} />
-      </View>
       <Text style={styles.title}>Select Time Limit</Text>
-      <Text style={styles.timerLabel}>{selectedTime} seconds</Text>
-
-      <Slider
-        style={styles.slider}
-        minimumValue={30}
-        maximumValue={180}
-        step={15}
-        value={selectedTime}
-        onValueChange={setSelectedTime}
-        minimumTrackTintColor="#3498DB"
-        maximumTrackTintColor="#D6DBDF"
-        thumbTintColor="#2980B9"
-        disabled={isLoading}
-      />
-
+      <View style={styles.timeContainer}>
+        {times.map((time) => (
+          <TouchableOpacity
+            key={time}
+            style={[
+              styles.timeButton,
+              selectedTime === time && styles.selectedTimeButton
+            ]}
+            onPress={() => handleTimeSelect(time)}
+          >
+            <Text style={[
+              styles.timeText,
+              selectedTime === time && styles.selectedTimeText
+            ]}>
+              {time} seconds
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
       <TouchableOpacity
-        style={[styles.startButton, isLoading && styles.disabledButton]}
+        style={[styles.startButton, !selectedTime && styles.disabledButton]}
         onPress={startGame}
-        disabled={isLoading}
+        disabled={!selectedTime}
       >
-        <Text style={styles.startButtonText}>
-          {isLoading ? 'Generating Items...' : 'Start Game'}
-        </Text>
+        <Text style={styles.startButtonText}>Start Game</Text>
       </TouchableOpacity>
     </View>
   );
@@ -126,37 +71,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#EAF2F8',
+    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
   },
-  backButtonContainer: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 1,
-  },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1F618D',
     marginBottom: 30,
     textAlign: 'center',
+    color: '#333',
   },
-  timerLabel: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#154360',
+  timeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
   },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  startButton: {
-    backgroundColor: '#3498DB',
+  timeButton: {
+    backgroundColor: 'white',
     padding: 15,
     borderRadius: 10,
-    marginTop: 40,
+    width: '45%',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  selectedTimeButton: {
+    backgroundColor: '#007AFF',
+  },
+  timeText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedTimeText: {
+    color: 'white',
+  },
+  startButton: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 30,
     width: '80%',
     alignSelf: 'center',
   },
@@ -166,7 +123,7 @@ const styles = StyleSheet.create({
   startButtonText: {
     color: 'white',
     textAlign: 'center',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

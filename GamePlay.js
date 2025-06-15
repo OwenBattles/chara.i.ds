@@ -1,22 +1,11 @@
-import { Accelerometer } from 'expo-sensors';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const GamePlay = ({ navigation, route }) => {
-  const { timeLimit, items = [], category } = route.params;
+  const { timeLimit } = route.params;
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [score, setScore] = useState(0);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [answeredItems, setAnsweredItems] = useState([]);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [gameOver, setGameOver] = useState(false);
-  const [tiltDirection, setTiltDirection] = useState(null);
-  const [tiltValue, setTiltValue] = useState(0);
-  const [isTilting, setIsTilting] = useState(false);
-  const [lastTiltTime, setLastTiltTime] = useState(0);
   const timerRef = useRef(null);
-  const lastActionTime = useRef(0);
-  const canTriggerAction = useRef(true);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -50,14 +39,9 @@ const GamePlay = ({ navigation, route }) => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
           clearInterval(timerRef.current);
-          // setIsPlaying(false);
           // Use setTimeout to ensure navigation happens after state updates
           setTimeout(() => {
-            navigation.navigate('GameSummary', { 
-              score,
-              totalItems: items.length,
-              answeredItems
-            });
+            navigation.navigate('GameSummary', { score });
           }, 0);
           return 0;
         }
@@ -71,67 +55,14 @@ const GamePlay = ({ navigation, route }) => {
         clearInterval(timerRef.current);
       }
     };
-  }, [navigation, score, items.length, answeredItems]);
+  }, [navigation, score]);
 
-  const handleNextItem = (wasCorrect) => {
-    setAnsweredItems(prev => [...prev, {
-      item: items[currentItemIndex],
-      wasCorrect
-    }]);
-
-    if (currentItemIndex < items.length - 1) {
-      setCurrentItemIndex(prev => prev + 1);
-    } else {
-      // Game is over, navigate to summary
-      console.log('currentItemIndex', currentItemIndex);
-      console.log('items', items.length);
-      navigation.navigate('GameSummary', {
-        category,
-        score,
-        totalItems: items.length,
-        answeredItems: [...answeredItems, {
-          item: items[currentItemIndex],
-          wasCorrect
-        }]
-      });
-    }
+  const handleCorrect = () => {
+    setScore(prevScore => prevScore + 1);
   };
 
-  const handleYes = () => {
-    if (currentItemIndex < items.length - 1) {
-      setCurrentItemIndex(currentItemIndex + 1);
-    } else {
-      setGameOver(true);
-    }
-  };
-
-  const handleNo = () => {
-    if (currentItemIndex < items.length - 1) {
-      setCurrentItemIndex(currentItemIndex + 1);
-    } else {
-      setGameOver(true);
-    }
-  };
-
-  const handleTilt = (direction) => {
-    if (isTilting) return;
-    setIsTilting(true);
-    setTiltDirection(direction);
-    setScore(prev => prev + 1);
-    setTimeout(() => {
-      setIsTilting(false);
-      setTiltDirection(null);
-    }, 500);
-  };
-
-  const handleExit = () => {
-    setIsPlaying(false);
-    clearInterval(timerRef.current);
-    navigation.navigate('GameSummary', { 
-      score,
-      totalItems: items.length,
-      answeredItems
-    });
+  const handleIncorrect = () => {
+    setScore(prevScore => Math.max(0, prevScore - 1));
   };
 
   const formatTime = (seconds) => {
@@ -155,25 +86,28 @@ const GamePlay = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.exitButton}
-          onPress={handleExit}
-        >
-          <Text style={styles.exitButtonText}>Exit</Text>
-        </TouchableOpacity>
         <Text style={styles.timer}>Time: {formatTime(timeLeft)}</Text>
         <Text style={styles.score}>Score: {score}</Text>
       </View>
 
       <View style={styles.gameArea}>
-        <Text style={styles.category}>{category}</Text>
-        <Text style={styles.question}>{items[currentItemIndex]}</Text>
-        <Text style={styles.progress}>
-          Item {currentItemIndex + 1} of {items.length}
-        </Text>
-        <Text style={styles.instructions}>
-          Tilt up for correct, down for skip
-        </Text>
+        <Text style={styles.question}>Sample Question</Text>
+        {/* Add your game content here */}
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity 
+          style={[styles.button, styles.incorrectButton]}
+          onPress={handleIncorrect}
+        >
+          <Text style={styles.buttonText}>Incorrect</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, styles.correctButton]}
+          onPress={handleCorrect}
+        >
+          <Text style={styles.buttonText}>Correct</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -197,8 +131,9 @@ const GamePlay = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EAF2F8',
+    backgroundColor: '#f5f5f5',
     padding: 20,
+    flexDirection: 'row', // Changed to row for landscape layout
   },
   header: {
     position: 'absolute',
@@ -207,60 +142,54 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     zIndex: 1,
-  },
-  exitButton: {
-    backgroundColor: '#E74C3C',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  exitButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
   timer: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F618D',
+    color: '#333',
   },
   score: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F618D',
+    color: '#333',
   },
   gameArea: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 60,
-  },
-  category: {
-    fontSize: 20,
-    color: '#5DADE2',
-    marginBottom: 20,
-    fontWeight: '600',
+    marginTop: 60, // Added margin to account for header
   },
   question: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#154360',
-    marginBottom: 20,
+    color: '#333',
   },
-  progress: {
-    fontSize: 16,
-    color: '#7F8C8D',
-    marginTop: 10,
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
-  instructions: {
-    fontSize: 18,
-    color: '#5DADE2',
-    marginTop: 30,
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    width: '45%',
+  },
+  correctButton: {
+    backgroundColor: '#4CAF50',
+  },
+  incorrectButton: {
+    backgroundColor: '#F44336',
+  },
+  buttonText: {
+    color: 'white',
     textAlign: 'center',
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
   buttonContainer: {
     flexDirection: 'row',
